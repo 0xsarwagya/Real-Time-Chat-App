@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Real-Time Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        background-color: #333;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+
+      h1 {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      input[type="text"] {
+        padding: 10px;
+        font-size: 16px;
+        color: white;
+        background-color: #444;
+        border: none;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+
+      button[type="button"] {
+        padding: 10px 20px;
+        background-color: #1c87c9;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #chat-messages {
+        height: 400px;
+        overflow: auto;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #444;
+        border-radius: 5px;
+      }
+
+      #chat-messages p {
+        margin: 0;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Real-Time Chat Application</h1>
+    <div id="chat-messages"></div>
+    <form style="display: inline-block">
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="username"
+        required
+      />
+      <input
+        type="text"
+        id="message"
+        name="message"
+        placeholder="message"
+        required
+      />
+      <button type="button" id="send-message">Send</button>
+    </form>
+    <br /><br />
+    <script>
+      // Connect to socket.io
+      const socket = io.connect();
+
+      // Get references to form elements
+      const usernameInput = $("#username");
+      const messageInput = $("#message");
+      const sendMessageButton = $("#send-message");
+      const chatMessagesDiv = $("#chat-messages");
+
+      const scrollToBottom = () => {
+        const chatMessagesDiv = $("#chat-messages");
+        chatMessagesDiv.scrollTop(chatMessagesDiv.prop("scrollHeight"));
+      };
+
+      // Listen for new messages in real-time
+      socket.on("newMessage", (chatMessage) => {
+        chatMessagesDiv.append(
+          `<p>${chatMessage.username}: ${chatMessage.message}</p>`
+        );
+        scrollToBottom();
+      });
+
+      // Send a new message
+      sendMessageButton.click(() => {
+        const username = usernameInput.val();
+        const message = messageInput.val();
+
+        // Send the message to the server
+        $.get(`/message?username=${username}&message=${message}`);
+
+        // Clear the message input
+        messageInput.val("");
+      });
+
+      // Load all messages from the server
+      $.get("/messages", (messages) => {
+        for (const key in messages) {
+          const chatMessage = messages[key];
+          chatMessagesDiv.append(
+            `<p>${chatMessage.username}: ${chatMessage.message}</p>`
+          );
+        }
+        scrollToBottom();
+      });
+    </script>
+  </body>
+</html>
